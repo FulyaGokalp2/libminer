@@ -3,16 +3,31 @@
 #' Provide a brief summary of the package
 #' libraries on your machine.
 #'
+#' @param sizes logical indicating whether or not to calculate library sizes. Default `FALSE`.
+#'
 #' @return A two-column `data.frame` containing the count of
 #'  packages in each of the user's libraries
 #' @export
 #'
 #' @examples
 #' lib_summary()
-lib_summary <- function(){
-  pkgs <- utils::installed.packages()
-  pkgs_tbl <- table(pkgs[, "LibPath"])
-  pkgs_df <- as.data.frame(pkgs_tbl, stringsAsFactors=FALSE)
-  names(pkgs_df) <- c("Library", "n_packages")
-  pkgs_df
+lib_summary <- function(sizes = FALSE){
+  if (!is.logical(sizes)){
+    stop("'sizes' must be TRUE or FALSE.")
+  }
+
+  pkg <- utils::installed.packages()
+  pkg_tbl <- table(pkg[, "LibPath"])
+  pkg_df <- as.data.frame(pkg_tbl, stringsAsFactors=FALSE)
+  names(pkg_df) <- c("Library", "n_packages")
+
+  if (sizes){
+    pkg_df$lib_size <- sapply(
+      pkg_df$Library,
+      function(x){
+        sum(fs::file_size(fs::dir_ls(x, recurse = FALSE)))
+      }
+    )
+  }
+  pkg_df
 }
